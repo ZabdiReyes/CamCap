@@ -27,20 +27,25 @@ public class CamCap extends javax.swing.JFrame {
     Mat frame = new Mat();
     Mat area;
     Mat cara;
+    Mat puño;
     Mat circulos = new Mat();
 
     MatOfByte mem = new MatOfByte();
 
     CascadeClassifier faceDetector;  // Objeto reconocedor de imagenes
     CascadeClassifier eyeDetector;   // Objeto para reconocer ojos
+    CascadeClassifier fistDetector;   // Objeto para reconocer ojos
 
     MatOfRect faceDetections;   // Matriz donde se alojarán las caras detectadas
     MatOfRect eyeDetections;   // Matriz donde se alojarán los ojos detectadas
+    MatOfRect fistDetections;   // Matriz donde se alojarán los ojos detectadas
 
     String File_path = "";
     String base_path = "./data/haarcascades/";   // Carpeta donde se localizan los modelos de reconocimiento
     String faceFile = "haarcascade_frontalface_alt.xml";  // Archivo referencia para reconocimiento de rostros
     String eyeFile = "haarcascade_eye.xml";  // Archivo referencia para reconocimiento de rostros
+    //String fistFile = "fist_frente_sin_borde.xml";
+    String fistFile = "fist6.xml";
 
     class DaemonThread implements Runnable {
 
@@ -64,9 +69,13 @@ public class CamCap extends javax.swing.JFrame {
             
             faceDetector = new CascadeClassifier(base_path + faceFile); // Se crea un objeto CascadeClassifier que reconocera caras
             faceDetections = new MatOfRect(); // Se inicializa el objeto donde se guardaran las caras detectadas
-
+            
             eyeDetector = new CascadeClassifier(base_path + eyeFile); // Se crea un objeto CascadeClassifier que reconocera caras
             eyeDetections = new MatOfRect(); // Se inicializa el objeto donde se guardaran las caras detectadas
+            
+            fistDetector = new CascadeClassifier(base_path+fistFile);
+            fistDetections = new MatOfRect();
+            
 
             synchronized (this) {
                 while (runnable) {
@@ -83,6 +92,7 @@ public class CamCap extends javax.swing.JFrame {
                                 // Se crea un cuadrito verde por cada cara detectada
                                 Imgproc.rectangle(frame, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
                                         new Scalar(0, 255, 0));
+                                
 
                                
                                 cara = frame.submat(faceDetections.toArray()[i]);
@@ -90,7 +100,7 @@ public class CamCap extends javax.swing.JFrame {
                                 
                                 eyeDetector.detectMultiScale(cara, eyeDetections);
 
-                                if (eyeDetections.toArray().length != 0) {
+                                if (eyeDetections.toArray().length != 0 && eyeDetections.toArray().length < 3) {
 
                                     System.out.println("Cara con " + eyeDetections.toArray().length + " ojos");
 
@@ -99,7 +109,7 @@ public class CamCap extends javax.swing.JFrame {
                                         Rect rect2 = eyeDetections.toArray()[j];
 
                                         Imgproc.rectangle(frame, new Point(rect2.x, rect2.y), new Point(rect2.x + rect2.width, rect2.y + rect2.height),
-                                        new Scalar(0, 255, 0));
+                                        new Scalar(0, 0, 255));
                                         
                                         Mat eye = cara.submat(eyeDetections.toArray()[j]);
 
@@ -107,6 +117,44 @@ public class CamCap extends javax.swing.JFrame {
                                 }
 
                             }
+                            
+                            fistDetector.detectMultiScale(frame, fistDetections);
+                            
+                            for (Rect rect : fistDetections.toArray()) {
+                                
+                                // Se crea un cuadrito verde por cada cara detectada
+                                Imgproc.rectangle(frame, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
+                                        new Scalar(255, 0, 0));
+                            }
+                                
+
+                               /*
+                                puño = frame.submat(fistDetections.toArray()[i]);
+                                
+                                
+                                fistDetector.detectMultiScale(puño, fistDetections);
+                                
+                                if(fistDetections.toArray().length != 0){
+                                    //System.out.println(fistDetections.toArray().length + " puños");
+                                    
+                                    for (int j = 0; j < fistDetections.toArray().length; j++) {
+                                        
+                                        Rect rect3 = fistDetections.toArray()[j];
+
+                                        Imgproc.rectangle(frame, new Point(rect3.x, rect3.y), new Point(rect3.x + rect3.width, rect3.y + rect3.height),
+                                        new Scalar(255, 0, 0));
+                                        
+                                        Mat puño = cara.submat(fistDetections.toArray()[j]);
+
+                                    }
+                                    
+                                }
+                                
+
+                            }*/
+                            
+                            
+                            
 
                             // Se codifica la imagen frame a un arreglo de memoria
                             Imgcodecs.imencode(".bmp", frame, mem);
@@ -197,7 +245,7 @@ public class CamCap extends javax.swing.JFrame {
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 369, Short.MAX_VALUE)
+            .addGap(0, 448, Short.MAX_VALUE)
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -269,7 +317,7 @@ public class CamCap extends javax.swing.JFrame {
                 .addGap(6, 6, 6)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 373, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 452, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
@@ -350,6 +398,7 @@ public class CamCap extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        
         //System.loadLibrary("OpenCV");
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
